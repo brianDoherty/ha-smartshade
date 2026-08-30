@@ -11,7 +11,7 @@
       },
       "login": {
         "title": "Sign in",
-        "description": "Pick the app you sign into on your phone. Brands use separate logins, so your details are only ever sent to the one you choose.\n\n**Only Marygrove is confirmed**, on a Spettmann Smart-Shade Mini Hub. The three apps marked *shares a confirmed login* use byte-identical credentials, so signing in should work \u2014 but no awning of those brands has ever been driven end to end. Apps marked *untested* have never been run at all. Either way, please tell us how it went at https://github.com/briandoherty/ha-smartshade/issues",
+        "description": "Pick the app you sign into on your phone. Brands use separate logins, so your details are only ever sent to the one you choose.\n\n**Only Marygrove is confirmed**, on a Spettmann Smart-Shade Mini Hub. The three apps marked *shares a confirmed login* use byte-identical credentials, so signing in should work \u2014 but no awning of those brands has ever been driven end to end. Apps marked *untested* have never been run at all. Either way, please tell us how it went on GitHub",
         "data": {
           "brand": "Your app",
           "username": "Email",
@@ -45,7 +45,7 @@
     },
     "abort": {
       "already_configured": "This account is already configured.",
-      "report": "Compatibility report \u2014 copy everything below into a GitHub issue at https://github.com/briandoherty/ha-smartshade/issues\n\n```\n{report}\n```\n\nNothing was saved. Run setup again to add your awning.",
+      "report": "Compatibility report \u2014 copy everything below into an issue on the project's GitHub page.\n\n```\n{report}\n```\n\nNothing was saved. Run setup again to add your awning.",
       "reauth_successful": "Reconnected."
     }
   },
