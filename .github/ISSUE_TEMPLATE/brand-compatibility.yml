@@ -1,0 +1,85 @@
+name: Brand / hardware compatibility report
+description: Help us support an awning brand or hub model beyond Marygrove
+title: "[compat] "
+labels: ["compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks — this is the single most useful thing you can contribute.
+
+        All eight t2Fi awning brands are already wired up — setup detects
+        yours automatically, so there is nothing to wait for. Just install it
+        and try.
+
+        Only **Marygrove on a Spettmann Smart-Shade hub** is confirmed working.
+        The other seven are built from their apps and have never been run
+        against real hardware, so your report is what turns one of them into a
+        supported brand.
+
+        **A failure report is as valuable as a success.** If setup fails, the
+        debug log below almost certainly says exactly what to fix.
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which app do you sign into?
+      options:
+        - Smart Shade PRO (confirmed)
+        - Marygrove Pro (confirmed)
+        - The Awning Company (untested — pool A)
+        - SunPro (untested — pool A)
+        - Liberty Smart Shade (untested — pool B)
+        - MacDonald Awning (untested — pool B)
+        - Acacia (untested — pool B)
+        - Exclusive Awnings (untested — pool B)
+        - Something else — I'll describe it below
+    validations:
+      required: true
+  - type: input
+    id: hub
+    attributes:
+      label: Hub model / serial prefix
+      description: >
+        The first few characters of the serial, e.g. MNH-, RFH-, RFT-, TRH-,
+        MNL-. Visible in the app on the device's page. Don't post the full
+        serial.
+      placeholder: e.g. MNH-
+    validations:
+      required: true
+  - type: input
+    id: awning
+    attributes:
+      label: Awning brand and model
+      placeholder: e.g. Marygrove retractable, Liberty ...
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: What happened?
+      options:
+        - Haven't tried yet — just reporting that I have this hardware
+        - Tried it, it works
+        - Tried it, sign-in failed
+        - Tried it, signs in but no devices appear
+        - Tried it, devices appear but Open/Close does nothing (most useful pool B report)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Compatibility report
+      description: >
+        Add Integration → Smart Shade PRO → **Compatibility report** (instead of
+        "Set up my awning"). It works even when setup fails, saves nothing, and
+        is already stripped of your email, nicknames, location and full serial
+        numbers — paste it as-is. If you are already set up, Download
+        diagnostics from the integration page gives the same thing.
+      render: text
+  - type: checkboxes
+    id: ack
+    attributes:
+      label: Before submitting
+      options:
+        - label: >
+            If I pasted anything other than the compatibility report, I removed my
+            email address, full serial numbers and Wi-Fi network name from it.
+          required: true

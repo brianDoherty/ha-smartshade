@@ -1,0 +1,89 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Shade Awning",
+        "menu_options": {
+          "login": "Set up my awning",
+          "report": "Compatibility report (no sign-in saved)"
+        },
+        "description": "\u26a0\ufe0f **Unofficial integration for motorised outdoor equipment.** Not affiliated with or supported by any awning manufacturer. Home Assistant cannot see where your awning actually is and cannot detect wind \u2014 never rely on this as a safety system, and leave your wind sensor in place. Provided as-is with no warranty; you are responsible for any automation you write and its physical consequences.\n\nChoose **Set up my awning** to connect normally.\n\nChoose **Compatibility report** if setup fails, or if your brand is one of the unconfirmed ones. It signs in, prints what the cloud returned, and saves nothing \u2014 no account is added. The report contains no email, password, token, nickname, location or full serial number, so it is safe to paste into a GitHub issue."
+      },
+      "login": {
+        "title": "Sign in",
+        "description": "Pick the app you sign into on your phone. Brands use separate logins, so your details are only ever sent to the one you choose.\n\n**Only Marygrove is confirmed**, on a Spettmann Smart-Shade Mini Hub. The three apps marked *shares a confirmed login* use byte-identical credentials, so signing in should work \u2014 but no awning of those brands has ever been driven end to end. Apps marked *untested* have never been run at all. Either way, please tell us how it went at https://github.com/briandoherty/ha-smartshade/issues",
+        "data": {
+          "brand": "Your app",
+          "username": "Email",
+          "password": "Password"
+        },
+        "data_description": {
+          "brand": "confirmed = driven end to end on real hardware. shares a confirmed login = same credentials as Marygrove, so sign-in should work, but nobody has moved one of these awnings. untested = never run."
+        }
+      },
+      "report": {
+        "title": "Compatibility report",
+        "description": "Pick your app and sign in to generate the report. Nothing is saved and no devices are added \u2014 this only reads.\n\nThe report is also written to the Home Assistant log at warning level, so you can copy it from Settings \u2192 System \u2192 Logs if the dialog is awkward to select from.",
+        "data": {
+          "brand": "Your app",
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-enter your password",
+        "description": "The saved login for {username} stopped working. Sign in again to reconnect your awning.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email or password \u2014 or the wrong app was selected. Each brand's accounts exist in only one login system, so check the app you actually sign into.",
+      "cannot_connect": "Signed in, but could not fetch your devices. If you picked anything other than Marygrove this is the failure we most need reports of \u2014 please open an issue with the report from the log.",
+      "user_not_found": "No account with that email exists in this app's login system. Common causes: the wrong app selected (each brand's accounts live in only one login system), a typo, or an address that isn't your usual one. Capitalisation is retried automatically, so that isn't the cause."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "report": "Compatibility report \u2014 copy everything below into a GitHub issue at https://github.com/briandoherty/ha-smartshade/issues\n\n```\n{report}\n```\n\nNothing was saved. Run setup again to add your awning.",
+      "reauth_successful": "Reconnected."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Remote settings",
+        "description": "These build the RF command sent to your awning: remoteType:action:remoteNumber:channel+receiver. If open/close do nothing, adjust these to match your paired remote.",
+        "data": {
+          "remote_type": "Remote type (1-3)",
+          "remote_number": "Remote number",
+          "channel": "Channel",
+          "receiver_model": "Receiver model suffix (often blank)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "light": {
+        "name": "Light"
+      }
+    },
+    "sensor": {
+      "last_cloud_command": {
+        "name": "Last cloud command",
+        "state": {
+          "open": "Open",
+          "close": "Close",
+          "stop": "Stop",
+          "light": "Light"
+        }
+      }
+    },
+    "switch": {
+      "debug_logging": {
+        "name": "Debug logging"
+      }
+    }
+  }
+}
