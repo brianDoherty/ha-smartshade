@@ -6,6 +6,8 @@ uses — Marygrove Pro, Smart Shade PRO, Liberty, SunPro and others.
 
 Unofficial. Not affiliated with any manufacturer. See [Disclaimer](#disclaimer).
 
+<a href="https://www.buymeacoffee.com/BrianDoherty"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=BrianDoherty&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
+
 ---
 
 ## ⚠️ Read this before automating
@@ -49,16 +51,34 @@ Lippert Solera. Full detail in [docs/BRANDS.md](docs/BRANDS.md).
 
 ## Installation
 
-HACS → Integrations → ⋮ → **Custom repositories** → add
-`https://github.com/brianDoherty/ha-smartshade`, category **Integration**.
-Install, restart, then **Settings → Devices & Services → Add Integration →
-Smart Shade Awning**.
+Requires Home Assistant **2024.12** or newer.
 
-Or copy `custom_components/smartshade/` into your HA `config/custom_components/`
-directory and restart.
+### Via HACS (recommended)
 
-Sign in with the account from your awning's app. Requires Home Assistant
-2024.12 or newer.
+This isn't in the HACS default store yet, so add it as a custom repository —
+it's a one-time paste:
+
+1. Open **HACS** → **Integrations**
+2. Click the **⋮** menu (top right) → **Custom repositories**
+3. Repository: `https://github.com/brianDoherty/ha-smartshade`
+   Category: **Integration** → **Add**
+4. Close the dialog, search HACS for **Smart Shade Awning**, and click
+   **Download**
+5. **Restart Home Assistant**
+
+### Manually
+
+Copy the `custom_components/smartshade/` folder from this repo into your Home
+Assistant `config/custom_components/` directory, so you end up with
+`config/custom_components/smartshade/`, then restart Home Assistant.
+
+### Then set it up
+
+**Settings → Devices & Services → Add Integration → Smart Shade Awning**
+
+Choose **Set up my awning**, pick the app you sign into on your phone, and use
+that account's email and password. If sign-in fails, choose **Compatibility
+report** instead — see [Something not working?](#something-not-working).
 
 ## Entities
 
