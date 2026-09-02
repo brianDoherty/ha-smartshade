@@ -6,7 +6,7 @@ uses — Marygrove Pro, Smart Shade PRO, Liberty, SunPro and others.
 
 Unofficial. Not affiliated with any manufacturer. See [Disclaimer](#disclaimer).
 
-<a href="https://www.buymeacoffee.com/BrianDoherty"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=BrianDoherty&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
+<a href="https://www.buymeacoffee.com/BrianDoherty"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" height="50" width="178"></a>
 
 ---
 
