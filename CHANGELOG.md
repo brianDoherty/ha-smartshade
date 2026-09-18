@@ -4,6 +4,20 @@ All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-09-17
+
+### Fixed
+
+- **Entities went unavailable roughly a day after every restart, and stayed
+  that way.** The pool issues 24-hour ID tokens, and this gateway's authorizer
+  reports an expired one as `HTTP 400 {"msg": "No Authorizer User Id"}` rather
+  than a 401. Only a 401 triggered a token refresh, so the expired token was
+  never cleared: every poll from then on re-sent it and failed identically
+  until Home Assistant was restarted. Expired tokens are now recognised on 400
+  and 403 as well, and — so the situation stops arising at all — the token is
+  renewed from its own `exp` claim before it lapses. A refresh token that has
+  been revoked now falls back to the stored password instead of failing.
+
 ## [0.1.0] - 2026-08-28
 
 First release. Control a retractable awning through a Spettmann Smart-Shade RF

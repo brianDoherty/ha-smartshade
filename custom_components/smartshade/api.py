@@ -15,6 +15,7 @@ import hmac
 import json
 import logging
 import os
+import time
 
 import aiohttp
 
@@ -53,6 +54,37 @@ _INFO_BITS = b"Caldera Derived Key"
 _DAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 _MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+# Renew this long before the ID token's own expiry, so a poll that starts just
+# under the wire doesn't land just over it.
+_TOKEN_EXPIRY_MARGIN = 120
+
+# An expired ID token does not reliably arrive as a 401. The legacy gateway's
+# custom authorizer answers HTTP **400** {"msg": "No Authorizer User Id"} --
+# it resolved no user from the token and reports that with the wrong status.
+# Matching on the status alone therefore misses it, and the observed failure is
+# nasty: the dead token is never cleared, so every subsequent poll re-sends it
+# and fails identically until Home Assistant restarts.
+_AUTH_REJECTION_MARKERS = (
+    "no authorizer user id",
+    "the incoming token has expired",
+    "unauthorized",
+    "invalid token",
+)
+
+
+def _is_token_rejection(status: int, body: str) -> bool:
+    """Whether this response means "your token is no good" (body lower-cased).
+
+    Deliberately narrow on 400/403: those statuses carry ordinary errors too --
+    a paired accessory with no shadow of its own answers 400 -- and refreshing
+    on one of those would mask the real error behind a pointless round trip.
+    """
+    if status == 401:
+        return True
+    if status in (400, 403):
+        return any(marker in body for marker in _AUTH_REJECTION_MARKERS)
+    return False
 
 
 def _hash_sha256(buf: bytes) -> str:
@@ -120,6 +152,10 @@ class SmartShadeApi:
         self._refresh_username = pool_username or username
         self._password = password
         self._id_token: str | None = None
+        # Unix time the cached ID token lapses, read from its own `exp` claim.
+        # None means we could not decode one, in which case expiry is left to
+        # be discovered by a rejected request.
+        self._id_token_exp: float | None = None
         self._refresh_token: str | None = None
         self._pool_name = self._brand.pool_name
         # Whether this app client actually has a secret configured.
@@ -294,21 +330,22 @@ class SmartShadeApi:
             raise SmartShadeAuthError(
                 f"unexpected challenge: {resp.get('ChallengeName')}"
             )
-        self._id_token = result["IdToken"]
         self._refresh_token = result.get("RefreshToken", self._refresh_token)
-        self._capture_token_username()
+        self._store_id_token(result["IdToken"])
 
-    def _capture_token_username(self) -> None:
-        """Remember the pool's real username from the ID token.
+    def _store_id_token(self, token: str) -> None:
+        """Cache a freshly issued ID token and everything it tells us.
 
-        REFRESH_TOKEN_AUTH validates SECRET_HASH against the actual pool
-        username (the cognito:username claim), which differs from the email
-        alias used to sign in. Hashing the alias there fails validation.
+        Two claims matter. `cognito:username` is the pool's real username, which
+        REFRESH_TOKEN_AUTH validates SECRET_HASH against; it differs from the
+        email alias used to sign in, and hashing the alias there fails. `exp`
+        gives the lifetime -- this pool issues 24-hour tokens -- so renewal can
+        be scheduled rather than discovered by failing a request.
         """
-        if not self._id_token:
-            return
+        self._id_token = token
+        self._id_token_exp = None
         try:
-            payload = self._id_token.split(".")[1]
+            payload = token.split(".")[1]
             payload += "=" * (-len(payload) % 4)
             claims = json.loads(base64.urlsafe_b64decode(payload))
         except Exception:  # noqa: BLE001 - malformed token, keep the alias
@@ -318,6 +355,16 @@ class SmartShadeApi:
         if real and real != self._username:
             _LOGGER.debug("using pool username from ID token for refresh")
             self._refresh_username = real
+        exp = claims.get("exp")
+        if isinstance(exp, (int, float)):
+            self._id_token_exp = float(exp)
+            _LOGGER.debug("ID token valid for %ds", int(exp - time.time()))
+
+    def _token_expired(self) -> bool:
+        """Whether the cached token has lapsed, or is about to."""
+        if self._id_token_exp is None:
+            return False
+        return time.time() >= self._id_token_exp - _TOKEN_EXPIRY_MARGIN
 
     async def refresh(self) -> None:
         """Refresh the ID token using the stored refresh token.
@@ -375,21 +422,36 @@ class SmartShadeApi:
                         break
                     raise
                 else:
-                    self._id_token = resp["AuthenticationResult"]["IdToken"]
                     self._refresh_username = username
-                    self._capture_token_username()
+                    self._store_id_token(resp["AuthenticationResult"]["IdToken"])
                     _LOGGER.debug("refresh ok (secret_hash=%s)", self._use_secret_hash)
                     return
 
         raise last or SmartShadeAuthError("refresh failed")
 
     async def _ensure_token(self) -> None:
-        if self._id_token:
+        """Put a usable ID token in hand, renewing it *before* it lapses.
+
+        Waiting for a rejection is not good enough here: the gateway reports an
+        expired token as a 400 that is easily mistaken for an ordinary error
+        (see `_is_token_rejection`), so the cheap, unambiguous signal is the
+        token's own expiry.
+        """
+        if self._id_token and not self._token_expired():
             return
         if self._refresh_token:
-            await self.refresh()
-        else:
-            await self.authenticate()
+            try:
+                await self.refresh()
+                return
+            except SmartShadeAuthError as err:
+                # Refresh tokens get revoked and do age out. Falling back to the
+                # stored password keeps a working entry working; with no
+                # password there is nothing to fall back to, so let the caller
+                # turn this into a reauth prompt.
+                if not self._password:
+                    raise
+                _LOGGER.debug("refresh failed (%s); falling back to a full login", err)
+        await self.authenticate()
 
     async def _request(
         self,
@@ -438,10 +500,14 @@ class SmartShadeApi:
             # API Gateway answers 403 "Missing Authentication Token" when the
             # path/method doesn't exist. That is a routing bug, NOT an expired
             # token, so don't burn a refresh on it (which masks the real error).
-            routing_error = "missing authentication token" in text.lower()
-            if resp.status == 401 and _retry and not routing_error:
-                _LOGGER.debug("token rejected; refreshing and retrying once")
+            lowered = text.lower()
+            routing_error = "missing authentication token" in lowered
+            if _retry and not routing_error and _is_token_rejection(resp.status, lowered):
+                _LOGGER.debug(
+                    "token rejected (HTTP %s); refreshing and retrying once", resp.status
+                )
                 self._id_token = None
+                self._id_token_exp = None
                 await self._ensure_token()
                 return await self._request(method, endpoint, params, body, False)
             if resp.status >= 400:
